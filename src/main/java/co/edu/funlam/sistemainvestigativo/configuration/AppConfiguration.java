@@ -1,5 +1,6 @@
 package co.edu.funlam.sistemainvestigativo.configuration;
 
+import co.edu.funlam.sistemainvestigativo.filters.HeaderFilter;
 import co.edu.funlam.sistemainvestigativo.filters.JWTAuthFilter;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -16,21 +17,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+
 @EnableWebSecurity
+@Configuration
+@CrossOrigin(origins = "*")
 public class AppConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.cors().and()
+                .csrf().disable()
                 .addFilterAfter(new JWTAuthFilter(), UsernamePasswordAuthenticationFilter.class)
-                //.addFilterBefore(new Object()/*TODO: Añadir filtro de cabeceras*/, ChannelProcessingFilter.class)
+                .addFilterBefore(new HeaderFilter(), ChannelProcessingFilter.class)
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/login").permitAll()
                 .antMatchers(HttpMethod.POST, "/register").permitAll()
-                //permitir acceso a la consola h2 evitando problemas de CORS
                 .antMatchers("/h2-console/**").permitAll()
                 .anyRequest().authenticated();
     }
@@ -43,7 +47,7 @@ public class AppConfiguration extends WebSecurityConfigurerAdapter {
      */
     @Bean
     public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder(6);
+        return new BCryptPasswordEncoder(10);
     }
 
     /**
@@ -53,7 +57,7 @@ public class AppConfiguration extends WebSecurityConfigurerAdapter {
     public Reflections reflections(){
         return new Reflections(
                 new ConfigurationBuilder().setUrls(
-                        ClasspathHelper.forPackage("co.edu.funlam.sistemainvestigativo.controller")
+                        ClasspathHelper.forPackage("co.edu.funlam.sistemainvestigativo.controllers")
                 ).setScanners(new MethodAnnotationsScanner())
         );
     }

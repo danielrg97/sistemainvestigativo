@@ -1,6 +1,7 @@
 package co.edu.funlam.sistemainvestigativo.filters;
 
 import co.edu.funlam.sistemainvestigativo.annotations.AllowedRole;
+import co.edu.funlam.sistemainvestigativo.exceptions.access.ApplicationException;
 import co.edu.funlam.sistemainvestigativo.exceptions.access.accessToken.TokenNotFoundException;
 import co.edu.funlam.sistemainvestigativo.model.dao.access.AccessTokenDao;
 import io.jsonwebtoken.*;
@@ -97,7 +98,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
             return methodsAnnotated.get(getEndpoint(httpRequest))
                     .getAnnotation(AllowedRole.class)
                     .role()
-                    .equals(((List)claims.get("authorities")).stream().findFirst().orElse(""));
+                    .equals(((List)claims.get(AUTHORITIES_HEADER)).stream().findFirst().orElse(""));
         }else{
             //el endpoint no esta anotado con AllowedRole
             return true;
@@ -138,7 +139,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
         }else if(null != method.getAnnotation(DeleteMapping.class)){
             return Arrays.stream(method.getAnnotation(DeleteMapping.class).path()).findFirst().orElse("");
         }else{
-            throw new Exception("Metodo no aceptado");
+            throw new ApplicationException("Metodo no aceptado", true);
         }
     }
 }
